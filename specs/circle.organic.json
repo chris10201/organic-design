@@ -1,0 +1,16 @@
+{
+  "spec": "organic-line",
+  "specVersion": "0.1",
+  "algorithm": "organic-outline@1",
+  "params": {
+    "amplitude": 0.009,
+    "wavelength": 0.25,
+    "detail": 0.25,
+    "asymmetry": 0.1,
+    "cornerRadiusVariation": 0,
+    "strokeWidthVariation": 0.06
+  },
+  "seed": 42,
+  "seedPolicy": "fixed",
+  "clamps": { "maxAmplitudePx": 1.5 }
+}
