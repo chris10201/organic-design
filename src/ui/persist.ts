@@ -11,7 +11,9 @@ import {
 import type { OrganicParams } from "../core/types";
 import { initialState, type AppState, type ViewId } from "./store";
 
-const LS_KEY = "organic-design:v1:state";
+// v2: the center-point default changed (config.ts). Bumping the key drops stale
+// v1 working state so a fresh load opens on the new center, not the old default.
+const LS_KEY = "organic-design:v2:state";
 
 const HASH_PARAM_KEYS: Array<[string, keyof OrganicParams]> = [
   ["amp", "amplitude"],
@@ -22,7 +24,7 @@ const HASH_PARAM_KEYS: Array<[string, keyof OrganicParams]> = [
   ["swv", "strokeWidthVariation"],
 ];
 
-const VIEWS: ViewId[] = ["tune", "lineup", "grid", "ladder", "fillStroke"];
+const VIEWS: ViewId[] = ["grid", "tune", "ladder", "fillStroke"];
 
 export function toHash(s: AppState): string {
   const parts: string[] = [];

@@ -28,7 +28,6 @@ import { currentShape, type AppState, type Store } from "./store";
 
 export type ViewUpdate = (state: AppState) => void;
 
-const LINEUP_SIZES = [32, 44, 88, 200];
 const ANCHOR_SIZE = 44;
 
 function shapeSize(shape: Shape): { w: number; h: number } {
@@ -338,79 +337,24 @@ export function tuneView(container: HTMLElement, store: Store): ViewUpdate {
   };
 }
 
-// -------------------------------------------------------------- lineup view
-
-export function lineupView(container: HTMLElement, store: Store): ViewUpdate {
-  const root = h("div", { class: "lineup" });
-  container.append(
-    h(
-      "p",
-      { class: "view-note" },
-      "三種尺度律 × 四種尺寸，1:1 像素呈現。若「等比例」在小尺寸過躁或大尺寸過平，即是啟用 clamps.maxAmplitudePx 的證據。",
-    ),
-    root,
-  );
-  void store;
-  return (state) => {
-    const amp = state.config.params.amplitude;
-    const rows: Array<{ label: string; ampFor: (s: number) => number }> = [
-      { label: TEXT.rowProportional, ampFor: () => amp },
-      { label: TEXT.rowConstPx, ampFor: (s) => (amp * ANCHOR_SIZE) / s },
-      { label: TEXT.rowSqrt, ampFor: (s) => amp * Math.sqrt(ANCHOR_SIZE / s) },
-    ];
-    const clampPx = state.config.clamps.maxAmplitudePx;
-    clear(root);
-    for (const row of rows) {
-      const cells = h("div", { class: "lineup-row-cells" });
-      for (const size of LINEUP_SIZES) {
-        const shape = scaledShape(state, size);
-        const a = row.ampFor(size);
-        // The caption must report what is actually rendered: the generator
-        // caps the effective amplitude at maxAmplitudePx when the fuse is on.
-        const rawDelta = Math.max(0, a * size);
-        const delta = clampPx === null ? rawDelta : Math.min(rawDelta, clampPx);
-        const clamped = clampPx !== null && rawDelta > clampPx + 1e-9;
-        const card = shapeCard(state, shape, {
-          amplitude: a,
-          caption: [
-            `${size}px · Δ${delta.toFixed(2)}px${clamped ? "（受鉗）" : ""}`,
-          ],
-        });
-        cells.append(card);
-      }
-      root.append(
-        h("div", { class: "lineup-row" }, h("h3", {}, row.label), cells),
-      );
-    }
-  };
-}
-
 // ---------------------------------------------------------------- grid view
+// The home view: the current config tiled into a repeating grid, each cell
+// seeded per-instance (instanceSeed) so every shape is distinct — a preview of
+// the same spec's organic variation across a network of instances.
 
 export function gridView(container: HTMLElement, store: Store): ViewUpdate {
   const COLS = 6;
   const ROWS = 4;
   const GAP = 12;
-  let swapped = false;
 
-  const toolbar = h("div", { class: "view-toolbar" });
-  const swapBtn = h("button", { class: "btn", type: "button" }, TEXT.swapSides);
-  swapBtn.addEventListener("click", () => {
-    swapped = !swapped;
-    update(store.get());
-  });
-  toolbar.append(
-    swapBtn,
-    h(
-      "p",
-      { class: "view-note inline" },
-      "同一 config 鋪排成網格：左右兩種 seedPolicy，何者該為規格預設？",
-    ),
+  container.append(
+    h("p", { class: "view-note" }, TEXT.gridNote),
+    h("div", { class: "grid-panels" }),
   );
-  const panels = h("div", { class: "grid-panels" });
-  container.append(toolbar, panels);
+  const panels = container.querySelector<HTMLElement>(".grid-panels")!;
+  void store;
 
-  const update = (state: AppState) => {
+  return (state) => {
     const shape = scaledShape(state, ANCHOR_SIZE);
     const { w, h: sh } = shapeSize(shape);
     const pad =
@@ -422,45 +366,30 @@ export function gridView(container: HTMLElement, store: Store): ViewUpdate {
     const cellW = w + 2 * pad + GAP;
     const cellH = sh + 2 * pad + GAP;
 
-    const makePanel = (perInstance: boolean) => {
-      const el = svg("svg", {
-        width: String(COLS * cellW),
-        height: String(ROWS * cellH),
-        viewBox: `0 0 ${COLS * cellW} ${ROWS * cellH}`,
+    const el = svg("svg", {
+      width: String(COLS * cellW),
+      height: String(ROWS * cellH),
+      viewBox: `0 0 ${COLS * cellW} ${ROWS * cellH}`,
+    });
+    for (let i = 0; i < COLS * ROWS; i++) {
+      const cx = (i % COLS) * cellW + cellW / 2;
+      const cy = Math.floor(i / COLS) * cellH + cellH / 2;
+      const { node } = renderShape({
+        shape,
+        config: state.config,
+        mode: state.renderMode,
+        strokeWidth: state.baseStrokeWidth,
+        seed: instanceSeed(state.config.seed, i),
+        blink: state.blink,
+        palette: LIGHT,
       });
-      for (let i = 0; i < COLS * ROWS; i++) {
-        const cx = (i % COLS) * cellW + cellW / 2;
-        const cy = Math.floor(i / COLS) * cellH + cellH / 2;
-        const { node } = renderShape({
-          shape,
-          config: state.config,
-          mode: state.renderMode,
-          strokeWidth: state.baseStrokeWidth,
-          seed: perInstance ? instanceSeed(state.config.seed, i) : undefined,
-          blink: state.blink,
-          palette: LIGHT,
-        });
-        node.setAttribute("transform", `translate(${cx} ${cy})`);
-        el.append(node);
-      }
-      const title = perInstance ? TEXT.gridPerInstance : TEXT.gridFixed;
-      const active =
-        (perInstance && state.config.seedPolicy === "per-instance") ||
-        (!perInstance && state.config.seedPolicy === "fixed");
-      return h(
-        "div",
-        { class: "grid-panel" + (active ? " active-policy" : "") },
-        h("h3", {}, title + (active ? "（目前規格預設）" : "")),
-        el,
-      );
-    };
+      node.setAttribute("transform", `translate(${cx} ${cy})`);
+      el.append(node);
+    }
 
     clear(panels);
-    const fixed = makePanel(false);
-    const per = makePanel(true);
-    panels.append(...(swapped ? [per, fixed] : [fixed, per]));
+    panels.append(h("div", { class: "grid-panel" }, el));
   };
-  return update;
 }
 
 // -------------------------------------------------------------- ladder view

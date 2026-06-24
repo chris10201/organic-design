@@ -9,15 +9,14 @@ import {
   fillStrokeView,
   gridView,
   ladderView,
-  lineupView,
   tuneView,
   type ViewUpdate,
 } from "./ui/views";
 
+// Order = tab order. The repeating grid (per-instance seeds) is the home view.
 const VIEWS: Record<ViewId, (c: HTMLElement, s: Store) => ViewUpdate> = {
-  tune: tuneView,
-  lineup: lineupView,
   grid: gridView,
+  tune: tuneView,
   ladder: ladderView,
   fillStroke: fillStrokeView,
 };
@@ -42,7 +41,8 @@ const header = h(
   h(
     "h1",
     {},
-    "Organic Design ",
+    h("span", { class: "brand" }, "Organic Design"),
+    " ",
     h("span", { class: "subtitle" }, "有機線條調教工具 · "),
     algChip,
   ),

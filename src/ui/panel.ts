@@ -2,6 +2,7 @@
 
 import {
   ALGORITHM_V1,
+  defaultConfig,
   defaultSketchOutline,
   PARAM_RANGES_V2,
   PARAM_RANGES_V3,
@@ -238,6 +239,9 @@ export function buildPanel(store: Store): { el: HTMLElement; sync: Sync } {
   });
 
   // --- Spec params ---
+  // Double-clicking a param label resets it to the center-point value (not 0):
+  // the center is the home base the user adjusts around. "全部歸零" still zeroes.
+  const CENTER = defaultConfig().params;
   const paramRow = (
     key: keyof OrganicParams,
     extra: Partial<SliderRowOpts> & { decimals: number },
@@ -252,7 +256,7 @@ export function buildPanel(store: Store): { el: HTMLElement; sync: Sync } {
         step: PARAM_RANGES_V2[key].step,
         get: (s) => s.config.params[key],
         set: (v) => store.setParam(key, v),
-        resetTo: PARAM_RANGES_V2[key].min,
+        resetTo: CENTER[key],
         ...extra,
       }),
     );
@@ -266,7 +270,6 @@ export function buildPanel(store: Store): { el: HTMLElement; sync: Sync } {
     toValue: (s) => ampMax * s * s,
     toSlider: (v) => Math.sqrt(Math.max(0, v) / ampMax),
     decimals: 4,
-    resetTo: 0,
   });
   // Wavelength: log scale — equal perceptual steps are frequency ratios. The
   // track always spans the widest (@3) range; editing past @2's 0.5 cap forks
@@ -281,12 +284,11 @@ export function buildPanel(store: Store): { el: HTMLElement; sync: Sync } {
     toSlider: (v) =>
       Math.log(Math.max(wavMin, v) / wavMin) / Math.log(wavRatio),
     decimals: 3,
-    resetTo: wavMin,
   });
-  const detailRow = paramRow("detail", { decimals: 2, resetTo: 0 });
-  const asymmetryRow = paramRow("asymmetry", { decimals: 2, resetTo: 0 });
-  const crvRow = paramRow("cornerRadiusVariation", { decimals: 3, resetTo: 0 });
-  const swvRow = paramRow("strokeWidthVariation", { decimals: 3, resetTo: 0 });
+  const detailRow = paramRow("detail", { decimals: 2 });
+  const asymmetryRow = paramRow("asymmetry", { decimals: 2 });
+  const crvRow = paramRow("cornerRadiusVariation", { decimals: 3 });
+  const swvRow = paramRow("strokeWidthVariation", { decimals: 3 });
   syncs.push((s) => {
     crvRow.classList.toggle("dimmed", s.shapeKind !== "roundedRect");
     swvRow.classList.toggle("dimmed", s.renderMode === "fill");
@@ -430,14 +432,6 @@ export function buildPanel(store: Store): { el: HTMLElement; sync: Sync } {
   );
   syncs.push((s) =>
     strokeWidthRow.classList.toggle("dimmed", s.renderMode === "fill"),
-  );
-  const policySeg = segmented(
-    [
-      ["fixed", TEXT.seedFixed],
-      ["per-instance", TEXT.seedPerInstance],
-    ],
-    (s) => s.config.seedPolicy,
-    (v) => store.setConfig({ seedPolicy: v }),
   );
   const clampCheck = h("input", { type: "checkbox" });
   const clampNum = h("input", {
@@ -754,17 +748,6 @@ export function buildPanel(store: Store): { el: HTMLElement; sync: Sync } {
       h(
         "div",
         { class: "row" },
-        h(
-          "label",
-          { class: "param-label" },
-          TEXT.seedPolicy,
-          h("code", {}, "seedPolicy"),
-        ),
-        policySeg.el,
-      ),
-      h(
-        "div",
-        { class: "row" },
         h("label", { class: "param-label" }, TEXT.clampLabel),
         h("div", { class: "row-inputs" }, clampCheck, clampNum),
       ),
@@ -789,7 +772,7 @@ export function buildPanel(store: Store): { el: HTMLElement; sync: Sync } {
       h("p", { class: "hint" }, TEXT.presetHint),
     ),
   );
-  syncs.push(shapeSeg.sync, modeSeg.sync, policySeg.sync);
+  syncs.push(shapeSeg.sync, modeSeg.sync);
 
   return { el, sync: (state) => syncs.forEach((fn) => fn(state)) };
 }

@@ -11,7 +11,7 @@ import {
 
 export type RenderMode = "fill" | "stroke" | "fillStroke";
 export type CompareMode = "single" | "sideBySide" | "overlay";
-export type ViewId = "tune" | "lineup" | "grid" | "ladder" | "fillStroke";
+export type ViewId = "grid" | "tune" | "ladder" | "fillStroke";
 
 export interface AppState {
   config: OrganicConfig;
@@ -47,10 +47,10 @@ export function initialState(): AppState {
     rectHeight: 64,
     cornerRadius: 16,
     diameter: 120,
-    renderMode: "fill",
+    renderMode: "stroke",
     baseStrokeWidth: 2,
     compareMode: "overlay",
-    view: "tune",
+    view: "grid",
     zoom: 1,
     overlayGhost: true,
     overlayDiff: false,

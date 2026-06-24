@@ -24,9 +24,8 @@ export const PARAM_LABELS: Record<
 };
 
 export const VIEW_LABELS: Record<string, string> = {
-  tune: "調參",
-  lineup: "多尺寸",
   grid: "重複網格",
+  tune: "調參",
   ladder: "強度階梯",
   fillStroke: "填充×描邊",
 };
@@ -48,9 +47,6 @@ export const TEXT = {
   stroke: "描邊",
   fillStroke: "填充+描邊",
   strokeWidth: "基礎描邊寬",
-  seedPolicy: "種子策略",
-  seedFixed: "固定",
-  seedPerInstance: "每實例",
   clampLabel: "尺寸保險絲 maxAmplitudePx",
   compare: "A/B 比較",
   compareSingle: "單獨",
@@ -68,12 +64,8 @@ export const TEXT = {
   zoom: "縮放",
   darkBg: "深色背景",
   outOfSpec: "超出規格",
-  rowProportional: "等比例（規格現狀）",
-  rowConstPx: "固定像素（錨定 44px）",
-  rowSqrt: "平方根折衷",
-  gridFixed: "固定種子（每顆相同）",
-  gridPerInstance: "每實例種子（每顆互異）",
-  swapSides: "左右互換",
+  gridNote:
+    "同一 config 鋪排成重複網格，每顆使用互異種子（每實例），預覽同一規格下的有機變化。拖動左側參數即時更新；按住 Space＝純幾何閃視，R＝重擲種子。",
   maxDev: "最大偏移",
   totalDev: "總偏移(含不對稱)",
   undulation: "起伏週期",
