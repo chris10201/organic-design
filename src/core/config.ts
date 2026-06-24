@@ -54,6 +54,10 @@ export const PARAM_RANGES_V2: ParamRanges = {
   // k0 down to 2: bean/kidney shapes ARE k=2-dominant deformation; in the
   // bold regime the asymmetry-collision concern of v1 no longer applies.
   wavelength: { min: 0.05, max: 0.5, step: 0.005 },
+  // Widened past v1's 0.3 cap so the bold/extreme center (0.3) sits mid-slider
+  // with headroom; the generator clamps corner radii to the CSS overlap rule,
+  // so larger variation only sharpens the asymmetry, never folds the shape.
+  cornerRadiusVariation: { min: 0, max: 0.6, step: 0.005 },
 };
 
 /** Parameter Set v3 ranges: superset of v2 — the extreme/blob regime. */
@@ -83,36 +87,39 @@ export const SKETCH_RANGES = {
 } as const;
 
 export function defaultSketchOutline(): SketchOutline {
+  // Matches the center-point config below: a calm, near-1 outline that loosely
+  // shadows the fill (amplitudeScale 0.7, the reference's calmer-than-fill look).
   return {
     seedShift: 1,
-    scale: 1.08,
-    offset: [0.08, -0.05],
-    // 0.7: tuned by eye against the reference — its outlines are calmer than
-    // their fills (matches specs/blob.bold.organic.json).
+    scale: 1.02,
+    offset: [-0.045, -0.02],
     amplitudeScale: 0.7,
-    widthRel: 0.018,
+    widthRel: 0.012,
   };
 }
 
+/**
+ * The center point: the tuned @3 (extreme/blob) config the playground opens on.
+ * Sliders adjust around it; double-clicking a param label resets to these
+ * values. Pinned reference the user chose as the home base — not a frozen spec.
+ */
 export function defaultConfig(): OrganicConfig {
   return {
     spec: SPEC,
-    specVersion: "0.2",
-    algorithm: ALGORITHM_V2,
-    // Subtle-regime values tuned in Phase 4 (the @1 button spec numbers);
-    // the bold regime is reached via the ranges/presets, not a mode switch.
+    specVersion: "0.3",
+    algorithm: ALGORITHM_V3,
     params: {
-      amplitude: 0.01,
-      wavelength: 0.22,
-      detail: 0.3,
-      asymmetry: 0.12,
-      cornerRadiusVariation: 0.1,
-      strokeWidthVariation: 0.08,
+      amplitude: 0.1449616,
+      wavelength: 0.6380364656795914,
+      detail: 0,
+      asymmetry: 0,
+      cornerRadiusVariation: 0.3,
+      strokeWidthVariation: 0,
     },
-    seed: 42,
+    seed: 1357022654,
     seedPolicy: "fixed",
     clamps: { maxAmplitudePx: null },
-    sketchOutline: null,
+    sketchOutline: defaultSketchOutline(),
   };
 }
 
